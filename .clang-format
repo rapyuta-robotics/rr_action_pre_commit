@@ -27,6 +27,6 @@ PointerAlignment: Left
 SortIncludes: false
 SpaceAfterCStyleCast: true
 
-CommentPragmas: '^[/!]<'
+CommentPragmas: "^[/!]<"
 
 ColumnLimit: 120
