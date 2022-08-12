@@ -1,0 +1,4 @@
+[flake8]
+max-line-length = 120
+extend-ignore = E203
+extend-exclude = external,internal,migrations,node_modules,template,templates,thirdparty

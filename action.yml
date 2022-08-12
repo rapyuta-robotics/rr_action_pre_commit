@@ -1,0 +1,24 @@
+name: pre-commit
+description: run pre-commit
+inputs:
+  pre_commit_extra_args:
+    description: options to pass to pre-commit run
+    required: false
+    default: '--all-files'
+runs:
+  using: composite
+  steps:
+  - run: python -m pip install pre-commit
+    shell: bash
+  - run: python -m pip freeze --local
+    shell: bash
+  - run: |
+      ls -a $GITHUB_ACTION_PATH | grep -v -e "^.$" -e "^..$" -e "action" -e ".git*" \
+      | xargs -I % cp $GITHUB_ACTION_PATH/% $GITHUB_WORKSPACE
+    shell: bash
+  - uses: actions/cache@v3
+    with:
+      path: ~/.cache/pre-commit
+      key: pre-commit-3|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
+  - run: pre-commit run --show-diff-on-failure --color=always ${{ inputs.pre_commit_extra_args }}
+    shell: bash
