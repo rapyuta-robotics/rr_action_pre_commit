@@ -1,0 +1,38 @@
+{
+    "blocks": [
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "%NOTIFICATION_HEADER"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": ":github:  <%TAG_URL| Tag URL>"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": ":docker:  <%PA_LINK| `io_amr_pa` image>"
+          },
+          {
+            "type": "mrkdwn",
+            "text": ":docker:  <%UI_LINK| `io_amr_ui` image>"
+          }
+        ]
+      },
+      {
+        "type": "divider"
+      }
+    ]
+  }

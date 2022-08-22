@@ -44,6 +44,7 @@ jobs:
           UI_SHA=$(docker inspect --format='{{.RepoDigests}}' ${{ env.UI_DOCKER_REPO }}:${{ steps.tag_name.outputs.GIT_TAG }} | sed -e 's/.\+@\(.\+\)\]/\1/g')
           echo ::set-output name=PA_LINK::https://hub.docker.com/layers/${{ env.PA_DOCKER_REPO }}/${{ steps.tag_name.outputs.GIT_TAG }}/images/$PA_SHA
           echo ::set-output name=UI_LINK::https://hub.docker.com/layers/${{ env.UI_DOCKER_REPO }}/${{ steps.tag_name.outputs.GIT_TAG }}/images/$UI_SHA
+      - uses: actions/checkout@v3
       - name: Send notification
         uses: rapyuta-robotics/rr_action_slack_notificaton_wrapper@1.1.0
         if: ${{ success() && steps.set_up_links.outcome == 'success' }}
