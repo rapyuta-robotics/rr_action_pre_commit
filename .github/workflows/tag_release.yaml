@@ -1,0 +1,58 @@
+
+name: Tag Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "**"
+      - "!devel"
+      - "!devel_latest"
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    timeout-minutes: 160
+    env:
+      PA_DOCKER_REPO: rrdockerhub/io_amr_pa
+      UI_DOCKER_REPO: rrdockerhub/io_amr_ui
+    steps:
+      - name: Docker Login
+        uses: docker/login-action@v1.12.0
+        with:
+          username: ${{ secrets.DOCKER_USER }}
+          password: ${{ secrets.DOCKER_PASS }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Get Tag name
+        id: tag_name
+        run: |
+          echo ::set-output name=GIT_TAG::${GITHUB_REF#refs/tags/}
+      - name: Get image and update with release tag (rr_io_amr_pa)
+        run: |
+          docker image pull ${{ env.PA_DOCKER_REPO }}:${{ steps.tag_name.outputs.GIT_TAG }}
+      - name: Get image and update with release tag (rr_amr_ui)
+        run: |
+          docker image pull ${{ env.UI_DOCKER_REPO }}:${{ steps.tag_name.outputs.GIT_TAG }}
+      - name: Set-up built image links
+        id: set_up_links
+        run: |
+          PA_SHA=$(docker inspect --format='{{.RepoDigests}}' ${{ env.PA_DOCKER_REPO }}:${{ steps.tag_name.outputs.GIT_TAG }} | sed -e 's/.\+@\(.\+\)\]/\1/g')
+          UI_SHA=$(docker inspect --format='{{.RepoDigests}}' ${{ env.UI_DOCKER_REPO }}:${{ steps.tag_name.outputs.GIT_TAG }} | sed -e 's/.\+@\(.\+\)\]/\1/g')
+          echo ::set-output name=PA_LINK::https://hub.docker.com/layers/${{ env.PA_DOCKER_REPO }}/${{ steps.tag_name.outputs.GIT_TAG }}/images/$PA_SHA
+          echo ::set-output name=UI_LINK::https://hub.docker.com/layers/${{ env.UI_DOCKER_REPO }}/${{ steps.tag_name.outputs.GIT_TAG }}/images/$UI_SHA
+      - name: Send notification
+        uses: rapyuta-robotics/rr_action_slack_notificaton_wrapper@1.1.0
+        if: ${{ success() && steps.set_up_links.outcome == 'success' }}
+        with:
+          payload-file-path: ./.github/templates/tag_created.json
+          replacements: |
+            NOTIFICATION_HEADER=":bell:  `io_amr` *version ${{ steps.tag_name.outputs.GIT_TAG }} released*"
+            TAG_URL="${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.tag_name.outputs.GIT_TAG }}"
+            PA_LINK="${{ steps.set_up_links.outputs.PA_LINK }}"
+            UI_LINK="${{ steps.set_up_links.outputs.UI_LINK }}"
+          channel-id: C03TSSDSAJX #sootballs_common_stack_releases channel
+          slack-bot-token: ${{ secrets.SLACK_NOTIFICATIONS_APP_TOKEN }}
